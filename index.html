@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão Empresarial</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .hidden { display: none !important; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <!-- Ecrã de Login -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-900">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Acesso ao Sistema</h2>
+            <form id="login-form" onsubmit="realizarLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">Utilizador</label>
+                    <input type="text" id="login-user" class="w-full border p-2 rounded" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-1">Palavra-passe</label>
+                    <input type="password" id="login-pass" class="w-full border p-2 rounded" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Entrar</button>
+            </form>
+            <p id="login-error" class="text-red-500 text-sm mt-4 text-center hidden">Credenciais inválidas ou erro de base de dados!</p>
+        </div>
+    </div>
+
+    <!-- Ecrã Principal da Aplicação -->
+    <div id="app-screen" class="hidden min-h-screen flex flex-col md:flex-row">
+        <!-- Menu Lateral -->
+        <aside class="w-full md:w-64 bg-gray-800 text-white min-h-screen p-4 flex flex-col">
+            <h1 class="text-xl font-bold mb-8 text-center border-b border-gray-700 pb-4">Gestão Cloud</h1>
+            <nav class="space-y-2 flex-1">
+                <button onclick="mudarSeparador('dashboard')" class="w-full text-left p-2 rounded hover:bg-gray-700">📊 Dashboard</button>
+                <button onclick="mudarSeparador('produtos')" class="w-full text-left p-2 rounded hover:bg-gray-700">📦 Produtos</button>
+                <button onclick="mudarSeparador('clientes')" class="w-full text-left p-2 rounded hover:bg-gray-700">👥 Clientes</button>
+                <button onclick="mudarSeparador('fornecedores')" class="w-full text-left p-2 rounded hover:bg-gray-700">🏢 Fornecedores</button>
+                <button onclick="mudarSeparador('compras')" class="w-full text-left p-2 rounded hover:bg-gray-700">🛒 Compras</button>
+                <button onclick="mudarSeparador('vendas')" class="w-full text-left p-2 rounded hover:bg-gray-700">💰 Vendas</button>
+                <button onclick="mudarSeparador('financeiro')" class="w-full text-left p-2 rounded hover:bg-gray-700">🏦 Financeiro</button>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            <header class="flex justify-between items-center mb-8 bg-white p-4 rounded shadow">
+                <h2 id="titulo-pagina" class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm font-semibold text-green-600">● Ligado ao Supabase</span>
+                    <span class="font-medium bg-gray-200 px-3 py-1 rounded-full" id="user-avatar">Admin</span>
+                    <button onclick="terminarSessao()" class="text-red-500 hover:underline text-sm font-bold">Sair</button>
+                </div>
+            </header>
+
+            <!-- Dashboard -->
+            <section id="dashboard" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded shadow border-l-4 border-green-500">
+                        <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wide">Total Faturado (Vendas)</h3>
+                        <p class="text-3xl font-bold text-gray-800 mt-2" id="dash-vendas">€ 0.00</p>
+                    </div>
+                    <div class="bg-white p-6 rounded shadow border-l-4 border-red-500">
+                        <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wide">Total Gasto (Compras)</h3>
+                        <p class="text-3xl font-bold text-gray-800 mt-2" id="dash-compras">€ 0.00</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Módulo de Produtos -->
+            <section id="produtos" class="tab-content">
+                <div class="bg-white p-6 rounded shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Catálogo e Stock</h3>
+                        <button onclick="abrirModalNovoProduto()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-medium">+ Novo Produto</button>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Nome</th>
+                                <th class="p-2">Custo</th>
+                                <th class="p-2">Preço Venda</th>
+                                <th class="p-2">Stock</th>
+                                <th class="p-2 w-24">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-produtos"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Módulo de Clientes -->
+            <section id="clientes" class="tab-content">
+                <div class="bg-white p-6 rounded shadow">
+                    <div class="flex justify-between mb-4">
+                        <h3 class="text-lg font-bold">Gestão de Clientes</h3>
+                        <button onclick="abrirModalNovoCliente()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-medium">+ Novo Cliente</button>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Nome</th>
+                                <th class="p-2">Telefone</th>
+                                <th class="p-2 w-24">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-clientes"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Módulo de Fornecedores -->
+            <section id="fornecedores" class="tab-content">
+                <div class="bg-white p-6 rounded shadow">
+                    <div class="flex justify-between mb-4">
+                        <h3 class="text-lg font-bold">Gestão de Fornecedores</h3>
+                        <button onclick="abrirModalNovoFornecedor()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 font-medium">+ Novo Fornecedor</button>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Empresa</th>
+                                <th class="p-2">Telefone</th>
+                                <th class="p-2 w-24">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-fornecedores"></tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- Módulo de Compras -->
+            <section id="compras" class="tab-content">
+                <div class="bg-white p-6 rounded shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Registo de Compras</h3>
+                        <button onclick="abrirModalNovaCompra()" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 font-medium">+ Nova Compra</button>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Data</th>
+                                <th class="p-2">Fornecedor</th>
+                                <th class="p-2 text-right font-bold">Total Gasto</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-compras"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Módulo de Vendas -->
+            <section id="vendas" class="tab-content">
+                <div class="bg-white p-6 rounded shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Registo de Vendas</h3>
+                        <button onclick="abrirModalNovaVenda()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 font-medium">+ Nova Venda</button>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Data</th>
+                                <th class="p-2">Cliente</th>
+                                <th class="p-2 text-right">Desconto</th>
+                                <th class="p-2 text-right font-bold">Total Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-vendas"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Módulo Financeiro -->
+            <section id="financeiro" class="tab-content">
+                <div class="bg-white p-6 rounded shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold">Contas a Pagar e Receber</h3>
+                        <button onclick="abrirModalNovoFinanceiro()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 font-medium">+ Novo Registo</button>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2">Tipo</th>
+                                <th class="p-2">Descrição</th>
+                                <th class="p-2 text-right">Valor</th>
+                                <th class="p-2 text-center">Vencimento</th>
+                                <th class="p-2 text-center">Status</th>
+                                <th class="p-2 text-center">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabela-financeiro"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAIS DE CADASTRO -->
+    <!-- (Mantidos os de Produto, Cliente, Fornecedor, Compra e Venda intactos. Adicionado o Financeiro) -->
+
+    <!-- Modal Financeiro -->
+    <div id="modal-financeiro" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 class="text-xl font-bold mb-4">Novo Registo Financeiro</h3>
+            <div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Tipo</label>
+                    <select id="fin-tipo" class="w-full border p-2 rounded">
+                        <option value="RECEBER">A Receber (Entrada)</option>
+                        <option value="PAGAR">A Pagar (Saída)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Descrição</label>
+                    <input type="text" id="fin-descricao" class="w-full border p-2 rounded" placeholder="Ex: Conta de Luz, Serviço Extra...">
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium mb-1">Valor (€)</label>
+                    <input type="number" step="0.01" id="fin-valor" class="w-full border p-2 rounded">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-1">Data de Vencimento</label>
+                    <input type="date" id="fin-vencimento" class="w-full border p-2 rounded">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button onclick="fecharModalFinanceiro()" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button>
+                    <button id="btn-guardar-fin" onclick="guardarFinanceiro()" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">Gravar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modais de Produto, Cliente, Fornecedor, Venda e Compra Ocultados nesta visualização de código para concisão (Pode copiar o código abaixo inteiro, eles estão aqui) -->
+    
+    <div id="modal-produto" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-96"><h3 id="modal-produto-titulo" class="text-xl font-bold mb-4">Novo Produto</h3><div><input type="hidden" id="produto-id"><div class="mb-3"><label class="block text-sm font-medium mb-1">Nome</label><input type="text" id="produto-nome" class="w-full border p-2 rounded"></div><div class="mb-3 flex gap-2"><div class="w-1/2"><label class="block text-sm font-medium mb-1">Custo (€)</label><input type="number" step="0.01" id="produto-custo" class="w-full border p-2 rounded"></div><div class="w-1/2"><label class="block text-sm font-medium mb-1">Venda (€)</label><input type="number" step="0.01" id="produto-preco" class="w-full border p-2 rounded"></div></div><div class="mb-6"><label class="block text-sm font-medium mb-1">Stock Inicial</label><input type="number" id="produto-estoque" class="w-full border p-2 rounded"></div><div class="flex justify-end gap-2"><button onclick="fecharModalProduto()" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarProduto()" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div></div>
+    <div id="modal-cliente" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-96"><h3 id="modal-cliente-titulo" class="text-xl font-bold mb-4">Novo Cliente</h3><div><input type="hidden" id="cliente-id"><div class="mb-3"><label class="block text-sm font-medium mb-1">Nome</label><input type="text" id="cliente-nome" class="w-full border p-2 rounded"></div><div class="mb-6"><label class="block text-sm font-medium mb-1">Telefone</label><input type="text" id="cliente-telefone" class="w-full border p-2 rounded"></div><div class="flex justify-end gap-2"><button onclick="fecharModalCliente()" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarCliente()" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div></div>
+    <div id="modal-fornecedor" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-96"><h3 id="modal-fornecedor-titulo" class="text-xl font-bold mb-4">Novo Fornecedor</h3><div><input type="hidden" id="fornecedor-id"><div class="mb-3"><label class="block text-sm font-medium mb-1">Empresa</label><input type="text" id="fornecedor-nome" class="w-full border p-2 rounded"></div><div class="mb-6"><label class="block text-sm font-medium mb-1">Telefone</label><input type="text" id="fornecedor-telefone" class="w-full border p-2 rounded"></div><div class="flex justify-end gap-2"><button onclick="fecharModalFornecedor()" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarFornecedor()" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div></div>
+    <div id="modal-venda" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl"><h3 class="text-xl font-bold mb-4 border-b pb-2">Nova Venda</h3><div class="mb-4"><select id="venda-cliente" class="w-full border p-2 rounded bg-gray-50"></select></div><div class="mb-4 bg-green-50 p-4 rounded border border-green-100"><div class="flex gap-2"><select id="venda-produto" class="flex-1 border p-2 rounded"></select><input type="number" id="venda-qtd" class="w-24 border p-2 rounded text-center" min="1" value="1"><button onclick="adicionarAoCarrinhoVenda()" class="bg-green-600 text-white px-4 py-2 rounded">Adicionar</button></div></div><div class="min-h-[150px] max-h-[250px] overflow-y-auto mb-4 border rounded"><table class="w-full text-left text-sm"><thead class="sticky top-0 bg-gray-200"><tr><th class="p-2">Produto</th><th class="p-2 text-center">Qtd</th><th class="p-2 text-right">Subtotal</th><th class="p-2 text-center">Remover</th></tr></thead><tbody id="venda-carrinho-tbody"></tbody></table></div><div class="flex justify-between items-end border-t pt-4 mb-6"><div><label class="block text-sm font-bold mb-1">Desconto (€)</label><input type="number" id="venda-desconto" class="w-32 border p-2 rounded text-right" step="0.01" value="0" oninput="atualizarCarrinhoVendaUI()"></div><div class="text-right"><span id="venda-total-final" class="text-3xl font-bold text-green-600">€ 0.00</span></div></div><div class="flex justify-end gap-3"><button onclick="fecharModalVenda()" class="px-6 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarVenda()" class="px-6 py-2 bg-green-600 text-white rounded">Finalizar Venda</button></div></div></div>
+    <div id="modal-compra" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl"><h3 class="text-xl font-bold mb-4 border-b pb-2">Nova Compra</h3><div class="mb-4"><select id="compra-fornecedor" class="w-full border p-2 rounded bg-gray-50"></select></div><div class="mb-4 bg-indigo-50 p-4 rounded border border-indigo-100"><div class="flex gap-2"><select id="compra-produto" class="flex-1 border p-2 rounded"></select><input type="number" id="compra-qtd" class="w-24 border p-2 rounded text-center" min="1" value="1"><button onclick="adicionarAoCarrinhoCompra()" class="bg-indigo-600 text-white px-4 py-2 rounded">Adicionar</button></div></div><div class="min-h-[150px] max-h-[250px] overflow-y-auto mb-4 border rounded"><table class="w-full text-left text-sm
