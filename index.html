@@ -18,7 +18,8 @@
     <div id="login-screen" class="min-h-screen flex items-center justify-center bg-gray-900">
         <div class="bg-white p-8 rounded-lg shadow-lg w-96">
             <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Acesso ao Sistema</h2>
-            <form id="login-form" onsubmit="realizarLogin(event)">
+            <!-- Trava de segurança absoluta adicionada diretamente no onsubmit -->
+            <form id="login-form" onsubmit="event.preventDefault(); realizarLogin();">
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-1">Utilizador</label>
                     <input type="text" id="login-user" class="w-full border p-2 rounded" required>
@@ -203,8 +204,6 @@
     </div>
 
     <!-- MODAIS DE CADASTRO -->
-    <!-- (Mantidos os de Produto, Cliente, Fornecedor, Compra e Venda intactos. Adicionado o Financeiro) -->
-
     <!-- Modal Financeiro -->
     <div id="modal-financeiro" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -236,11 +235,127 @@
             </div>
         </div>
     </div>
-
-    <!-- Modais de Produto, Cliente, Fornecedor, Venda e Compra Ocultados nesta visualização de código para concisão (Pode copiar o código abaixo inteiro, eles estão aqui) -->
     
     <div id="modal-produto" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-96"><h3 id="modal-produto-titulo" class="text-xl font-bold mb-4">Novo Produto</h3><div><input type="hidden" id="produto-id"><div class="mb-3"><label class="block text-sm font-medium mb-1">Nome</label><input type="text" id="produto-nome" class="w-full border p-2 rounded"></div><div class="mb-3 flex gap-2"><div class="w-1/2"><label class="block text-sm font-medium mb-1">Custo (€)</label><input type="number" step="0.01" id="produto-custo" class="w-full border p-2 rounded"></div><div class="w-1/2"><label class="block text-sm font-medium mb-1">Venda (€)</label><input type="number" step="0.01" id="produto-preco" class="w-full border p-2 rounded"></div></div><div class="mb-6"><label class="block text-sm font-medium mb-1">Stock Inicial</label><input type="number" id="produto-estoque" class="w-full border p-2 rounded"></div><div class="flex justify-end gap-2"><button onclick="fecharModalProduto()" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarProduto()" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div></div>
     <div id="modal-cliente" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-96"><h3 id="modal-cliente-titulo" class="text-xl font-bold mb-4">Novo Cliente</h3><div><input type="hidden" id="cliente-id"><div class="mb-3"><label class="block text-sm font-medium mb-1">Nome</label><input type="text" id="cliente-nome" class="w-full border p-2 rounded"></div><div class="mb-6"><label class="block text-sm font-medium mb-1">Telefone</label><input type="text" id="cliente-telefone" class="w-full border p-2 rounded"></div><div class="flex justify-end gap-2"><button onclick="fecharModalCliente()" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarCliente()" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div></div>
     <div id="modal-fornecedor" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-96"><h3 id="modal-fornecedor-titulo" class="text-xl font-bold mb-4">Novo Fornecedor</h3><div><input type="hidden" id="fornecedor-id"><div class="mb-3"><label class="block text-sm font-medium mb-1">Empresa</label><input type="text" id="fornecedor-nome" class="w-full border p-2 rounded"></div><div class="mb-6"><label class="block text-sm font-medium mb-1">Telefone</label><input type="text" id="fornecedor-telefone" class="w-full border p-2 rounded"></div><div class="flex justify-end gap-2"><button onclick="fecharModalFornecedor()" class="px-4 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarFornecedor()" class="px-4 py-2 bg-blue-600 text-white rounded">Guardar</button></div></div></div></div>
     <div id="modal-venda" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl"><h3 class="text-xl font-bold mb-4 border-b pb-2">Nova Venda</h3><div class="mb-4"><select id="venda-cliente" class="w-full border p-2 rounded bg-gray-50"></select></div><div class="mb-4 bg-green-50 p-4 rounded border border-green-100"><div class="flex gap-2"><select id="venda-produto" class="flex-1 border p-2 rounded"></select><input type="number" id="venda-qtd" class="w-24 border p-2 rounded text-center" min="1" value="1"><button onclick="adicionarAoCarrinhoVenda()" class="bg-green-600 text-white px-4 py-2 rounded">Adicionar</button></div></div><div class="min-h-[150px] max-h-[250px] overflow-y-auto mb-4 border rounded"><table class="w-full text-left text-sm"><thead class="sticky top-0 bg-gray-200"><tr><th class="p-2">Produto</th><th class="p-2 text-center">Qtd</th><th class="p-2 text-right">Subtotal</th><th class="p-2 text-center">Remover</th></tr></thead><tbody id="venda-carrinho-tbody"></tbody></table></div><div class="flex justify-between items-end border-t pt-4 mb-6"><div><label class="block text-sm font-bold mb-1">Desconto (€)</label><input type="number" id="venda-desconto" class="w-32 border p-2 rounded text-right" step="0.01" value="0" oninput="atualizarCarrinhoVendaUI()"></div><div class="text-right"><span id="venda-total-final" class="text-3xl font-bold text-green-600">€ 0.00</span></div></div><div class="flex justify-end gap-3"><button onclick="fecharModalVenda()" class="px-6 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarVenda()" class="px-6 py-2 bg-green-600 text-white rounded">Finalizar Venda</button></div></div></div>
-    <div id="modal-compra" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl"><h3 class="text-xl font-bold mb-4 border-b pb-2">Nova Compra</h3><div class="mb-4"><select id="compra-fornecedor" class="w-full border p-2 rounded bg-gray-50"></select></div><div class="mb-4 bg-indigo-50 p-4 rounded border border-indigo-100"><div class="flex gap-2"><select id="compra-produto" class="flex-1 border p-2 rounded"></select><input type="number" id="compra-qtd" class="w-24 border p-2 rounded text-center" min="1" value="1"><button onclick="adicionarAoCarrinhoCompra()" class="bg-indigo-600 text-white px-4 py-2 rounded">Adicionar</button></div></div><div class="min-h-[150px] max-h-[250px] overflow-y-auto mb-4 border rounded"><table class="w-full text-left text-sm
+    <div id="modal-compra" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-2xl"><h3 class="text-xl font-bold mb-4 border-b pb-2">Nova Compra</h3><div class="mb-4"><select id="compra-fornecedor" class="w-full border p-2 rounded bg-gray-50"></select></div><div class="mb-4 bg-indigo-50 p-4 rounded border border-indigo-100"><div class="flex gap-2"><select id="compra-produto" class="flex-1 border p-2 rounded"></select><input type="number" id="compra-qtd" class="w-24 border p-2 rounded text-center" min="1" value="1"><button onclick="adicionarAoCarrinhoCompra()" class="bg-indigo-600 text-white px-4 py-2 rounded">Adicionar</button></div></div><div class="min-h-[150px] max-h-[250px] overflow-y-auto mb-4 border rounded"><table class="w-full text-left text-sm"><thead class="sticky top-0 bg-gray-200"><tr><th class="p-2">Produto</th><th class="p-2 text-center">Qtd Entrando</th><th class="p-2 text-right">Subtotal</th><th class="p-2 text-center">Remover</th></tr></thead><tbody id="compra-carrinho-tbody"></tbody></table></div><div class="flex justify-end items-end border-t pt-4 mb-6"><div class="text-right"><span id="compra-total-final" class="text-3xl font-bold text-red-600">€ 0.00</span></div></div><div class="flex justify-end gap-3"><button onclick="fecharModalCompra()" class="px-6 py-2 bg-gray-300 rounded">Cancelar</button><button onclick="guardarCompra()" class="px-6 py-2 bg-indigo-600 text-white rounded">Registar Compra</button></div></div></div>
+
+    <script>
+        const SUPABASE_URL = 'https://lllozpebuligdfxhmjof.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_s-pQONY9lYrWdcjOJyflvQ_0mzzZsSD';
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let listaProdutosGlobais = []; let listaClientesGlobais = []; let listaFornecedoresGlobais = [];
+        let carrinhoVenda = []; let carrinhoCompra = [];
+
+        // --- AUTENTICAÇÃO À PROVA DE FALHAS ---
+        async function realizarLogin() {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+            const errorMsg = document.getElementById('login-error');
+            
+            if(!user || !pass) return;
+            errorMsg.classList.add('hidden');
+            
+            try {
+                const { data, error } = await db.from('usuarios').select('*').eq('login', user).eq('senha', pass).single();
+                if (error) throw error;
+                if (data) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('app-screen').classList.remove('hidden');
+                    document.getElementById('user-avatar').innerText = data.nome;
+                    carregarDashboard();
+                }
+            } catch (err) { 
+                errorMsg.classList.remove('hidden'); 
+            }
+        }
+
+        function terminarSessao() { location.reload(); }
+
+        // --- NAVEGAÇÃO ---
+        function mudarSeparador(id) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.getElementById('titulo-pagina').innerText = id.charAt(0).toUpperCase() + id.slice(1);
+            
+            if (id === 'dashboard') carregarDashboard();
+            if (id === 'produtos') carregarProdutos();
+            if (id === 'clientes') carregarClientes();
+            if (id === 'fornecedores') carregarFornecedores();
+            if (id === 'vendas') carregarVendas();
+            if (id === 'compras') carregarCompras();
+            if (id === 'financeiro') carregarFinanceiro();
+        }
+
+        // --- PRODUTOS, CLIENTES E FORNECEDORES ---
+        async function carregarProdutos() { const { data } = await db.from('produtos').select('*').order('nome'); listaProdutosGlobais = data || []; const tbody = document.getElementById('tabela-produtos'); tbody.innerHTML = ''; listaProdutosGlobais.forEach(p => { tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2">${p.nome}</td><td class="p-2">€ ${Number(p.custo).toFixed(2)}</td><td class="p-2 font-medium text-blue-700">€ ${Number(p.preco_venda).toFixed(2)}</td><td class="p-2 font-bold ${p.estoque < 5 ? 'text-red-500' : 'text-green-600'}">${p.estoque}</td><td class="p-2"><button onclick="prepararEdicaoProduto('${p.id}')" class="text-blue-500 hover:underline">Editar</button></td></tr>`; }); }
+        function abrirModalNovoProduto() { document.getElementById('produto-id').value = ''; document.getElementById('produto-nome').value = ''; document.getElementById('produto-custo').value = ''; document.getElementById('produto-preco').value = ''; document.getElementById('produto-estoque').value = ''; document.getElementById('modal-produto').classList.remove('hidden'); }
+        function prepararEdicaoProduto(id) { const p = listaProdutosGlobais.find(x => x.id === id); if(!p) return; document.getElementById('produto-id').value = p.id; document.getElementById('produto-nome').value = p.nome; document.getElementById('produto-custo').value = p.custo; document.getElementById('produto-preco').value = p.preco_venda; document.getElementById('produto-estoque').value = p.estoque; document.getElementById('modal-produto').classList.remove('hidden'); }
+        function fecharModalProduto() { document.getElementById('modal-produto').classList.add('hidden'); }
+        async function guardarProduto() { const id = document.getElementById('produto-id').value; const dados = { nome: document.getElementById('produto-nome').value, custo: document.getElementById('produto-custo').value, preco_venda: document.getElementById('produto-preco').value, estoque: document.getElementById('produto-estoque').value }; if(!dados.nome) return alert("Preencha o nome."); try { if (id) await db.from('produtos').update(dados).eq('id', id); else await db.from('produtos').insert([dados]); fecharModalProduto(); carregarProdutos(); } catch(err) { alert("Erro: " + err.message); } }
+
+        async function carregarClientes() { const { data } = await db.from('clientes').select('*').order('nome'); listaClientesGlobais = data || []; const tbody = document.getElementById('tabela-clientes'); tbody.innerHTML = ''; listaClientesGlobais.forEach(c => { tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2">${c.nome}</td><td class="p-2">${c.telefone || '-'}</td><td class="p-2"><button onclick="prepararEdicaoCliente('${c.id}')" class="text-blue-500 hover:underline">Editar</button></td></tr>`; }); }
+        function abrirModalNovoCliente() { document.getElementById('cliente-id').value = ''; document.getElementById('cliente-nome').value = ''; document.getElementById('cliente-telefone').value = ''; document.getElementById('modal-cliente').classList.remove('hidden'); }
+        function prepararEdicaoCliente(id) { const c = listaClientesGlobais.find(x => x.id === id); if(!c) return; document.getElementById('cliente-id').value = c.id; document.getElementById('cliente-nome').value = c.nome; document.getElementById('cliente-telefone').value = c.telefone; document.getElementById('modal-cliente').classList.remove('hidden'); }
+        function fecharModalCliente() { document.getElementById('modal-cliente').classList.add('hidden'); }
+        async function guardarCliente() { const id = document.getElementById('cliente-id').value; const dados = { nome: document.getElementById('cliente-nome').value, telefone: document.getElementById('cliente-telefone').value }; if(!dados.nome) return alert("Preencha o nome."); try { if (id) await db.from('clientes').update(dados).eq('id', id); else await db.from('clientes').insert([dados]); fecharModalCliente(); carregarClientes(); } catch(err) { alert("Erro: " + err.message); } }
+
+        async function carregarFornecedores() { const { data } = await db.from('fornecedores').select('*').order('nome'); listaFornecedoresGlobais = data || []; const tbody = document.getElementById('tabela-fornecedores'); tbody.innerHTML = ''; listaFornecedoresGlobais.forEach(f => { tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2">${f.nome}</td><td class="p-2">${f.telefone || '-'}</td><td class="p-2"><button onclick="prepararEdicaoFornecedor('${f.id}')" class="text-blue-500 hover:underline">Editar</button></td></tr>`; }); }
+        function abrirModalNovoFornecedor() { document.getElementById('fornecedor-id').value = ''; document.getElementById('fornecedor-nome').value = ''; document.getElementById('fornecedor-telefone').value = ''; document.getElementById('modal-fornecedor').classList.remove('hidden'); }
+        function prepararEdicaoFornecedor(id) { const f = listaFornecedoresGlobais.find(x => x.id === id); if(!f) return; document.getElementById('fornecedor-id').value = f.id; document.getElementById('fornecedor-nome').value = f.nome; document.getElementById('fornecedor-telefone').value = f.telefone; document.getElementById('modal-fornecedor').classList.remove('hidden'); }
+        function fecharModalFornecedor() { document.getElementById('modal-fornecedor').classList.add('hidden'); }
+        async function guardarFornecedor() { const id = document.getElementById('fornecedor-id').value; const dados = { nome: document.getElementById('fornecedor-nome').value, telefone: document.getElementById('fornecedor-telefone').value }; if(!dados.nome) return alert("Preencha o nome."); try { if (id) await db.from('fornecedores').update(dados).eq('id', id); else await db.from('fornecedores').insert([dados]); fecharModalFornecedor(); carregarFornecedores(); } catch(err) { alert("Erro: " + err.message); } }
+
+        // --- MÓDULO: VENDAS (SAÍDA DE STOCK) ---
+        async function carregarVendas() { const { data } = await db.from('vendas').select('*, clientes(nome)').order('criado_em', { ascending: false }); const tbody = document.getElementById('tabela-vendas'); tbody.innerHTML = ''; (data||[]).forEach(v => { const dataFormatada = new Date(v.criado_em).toLocaleDateString('pt-PT'); const clienteNome = v.clientes ? v.clientes.nome : 'Desconhecido'; tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2">${dataFormatada}</td><td class="p-2">${clienteNome}</td><td class="p-2 text-right text-red-500">€ ${Number(v.desconto).toFixed(2)}</td><td class="p-2 text-right font-bold text-green-700">€ ${Number(v.total).toFixed(2)}</td></tr>`; }); }
+        async function abrirModalNovaVenda() { carrinhoVenda = []; document.getElementById('venda-desconto').value = '0'; await carregarClientes(); await carregarProdutos(); const selectCliente = document.getElementById('venda-cliente'); selectCliente.innerHTML = '<option value="">-- Selecione o Cliente --</option>'; listaClientesGlobais.forEach(c => selectCliente.innerHTML += `<option value="${c.id}">${c.nome}</option>`); const selectProduto = document.getElementById('venda-produto'); selectProduto.innerHTML = '<option value="">-- Selecione o Produto --</option>'; listaProdutosGlobais.forEach(p => { if(p.estoque > 0) selectProduto.innerHTML += `<option value="${p.id}">${p.nome} (Stock: ${p.estoque})</option>`; }); atualizarCarrinhoVendaUI(); document.getElementById('modal-venda').classList.remove('hidden'); }
+        function fecharModalVenda() { document.getElementById('modal-venda').classList.add('hidden'); }
+        function adicionarAoCarrinhoVenda() { const produtoId = document.getElementById('venda-produto').value; const qtd = parseInt(document.getElementById('venda-qtd').value); if(!produtoId) return; const produtoInfo = listaProdutosGlobais.find(p => p.id === produtoId); if(qtd > produtoInfo.estoque) return alert(`Apenas ${produtoInfo.estoque} em stock!`); const itemExistente = carrinhoVenda.find(item => item.produto.id === produtoId); if(itemExistente) { if(itemExistente.quantidade + qtd > produtoInfo.estoque) return; itemExistente.quantidade += qtd; } else { carrinhoVenda.push({ produto: produtoInfo, quantidade: qtd }); } document.getElementById('venda-qtd').value = 1; atualizarCarrinhoVendaUI(); }
+        function removerDoCarrinhoVenda(index) { carrinhoVenda.splice(index, 1); atualizarCarrinhoVendaUI(); }
+        function atualizarCarrinhoVendaUI() { const tbody = document.getElementById('venda-carrinho-tbody'); tbody.innerHTML = ''; let somaSubtotais = 0; carrinhoVenda.forEach((item, index) => { const preco = Number(item.produto.preco_venda); const subtotal = preco * item.quantidade; somaSubtotais += subtotal; tbody.innerHTML += `<tr class="border-b"><td class="p-2">${item.produto.nome}</td><td class="p-2 text-center font-bold">${item.quantidade}</td><td class="p-2 text-right font-bold">€ ${subtotal.toFixed(2)}</td><td class="p-2 text-center"><button onclick="removerDoCarrinhoVenda(${index})" class="text-red-500 font-bold">X</button></td></tr>`; }); const desconto = Number(document.getElementById('venda-desconto').value) || 0; document.getElementById('venda-total-final').innerText = `€ ${(somaSubtotais - desconto).toFixed(2)}`; }
+        async function guardarVenda() { const clienteId = document.getElementById('venda-cliente').value; const desconto = Number(document.getElementById('venda-desconto').value) || 0; if(!clienteId || carrinhoVenda.length === 0) return alert("Faltam dados."); let somaSubtotais = 0; carrinhoVenda.forEach(item => { somaSubtotais += Number(item.produto.preco_venda) * item.quantidade; }); const totalFinal = somaSubtotais - desconto; try { await db.from('vendas').insert([{ cliente_id: clienteId, desconto: desconto, total: totalFinal }]); for (const item of carrinhoVenda) { await db.from('produtos').update({ estoque: item.produto.estoque - item.quantidade }).eq('id', item.produto.id); } fecharModalVenda(); carregarVendas(); carregarDashboard(); } catch(error) { alert(error.message); } }
+
+        // --- MÓDULO: COMPRAS (ENTRADA DE STOCK) ---
+        async function carregarCompras() { const { data } = await db.from('compras').select('*, fornecedores(nome)').order('criado_em', { ascending: false }); const tbody = document.getElementById('tabela-compras'); tbody.innerHTML = ''; (data||[]).forEach(c => { const dataFormatada = new Date(c.criado_em).toLocaleDateString('pt-PT'); const fornecedorNome = c.fornecedores ? c.fornecedores.nome : 'Desconhecido'; tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2">${dataFormatada}</td><td class="p-2">${fornecedorNome}</td><td class="p-2 text-right font-bold text-red-700">€ ${Number(c.total).toFixed(2)}</td></tr>`; }); }
+        async function abrirModalNovaCompra() { carrinhoCompra = []; await carregarFornecedores(); await carregarProdutos(); const selectFornecedor = document.getElementById('compra-fornecedor'); selectFornecedor.innerHTML = '<option value="">-- Selecione --</option>'; listaFornecedoresGlobais.forEach(f => selectFornecedor.innerHTML += `<option value="${f.id}">${f.nome}</option>`); const selectProduto = document.getElementById('compra-produto'); selectProduto.innerHTML = '<option value="">-- Selecione --</option>'; listaProdutosGlobais.forEach(p => { selectProduto.innerHTML += `<option value="${p.id}">${p.nome}</option>`; }); atualizarCarrinhoCompraUI(); document.getElementById('modal-compra').classList.remove('hidden'); }
+        function fecharModalCompra() { document.getElementById('modal-compra').classList.add('hidden'); }
+        function adicionarAoCarrinhoCompra() { const produtoId = document.getElementById('compra-produto').value; const qtd = parseInt(document.getElementById('compra-qtd').value); if(!produtoId) return; const produtoInfo = listaProdutosGlobais.find(p => p.id === produtoId); const itemExistente = carrinhoCompra.find(item => item.produto.id === produtoId); if(itemExistente) { itemExistente.quantidade += qtd; } else { carrinhoCompra.push({ produto: produtoInfo, quantidade: qtd }); } document.getElementById('compra-qtd').value = 1; atualizarCarrinhoCompraUI(); }
+        function removerDoCarrinhoCompra(index) { carrinhoCompra.splice(index, 1); atualizarCarrinhoCompraUI(); }
+        function atualizarCarrinhoCompraUI() { const tbody = document.getElementById('compra-carrinho-tbody'); tbody.innerHTML = ''; let somaSubtotais = 0; carrinhoCompra.forEach((item, index) => { const custo = Number(item.produto.custo); const subtotal = custo * item.quantidade; somaSubtotais += subtotal; tbody.innerHTML += `<tr class="border-b"><td class="p-2">${item.produto.nome}</td><td class="p-2 text-center text-indigo-600 font-bold">+${item.quantidade}</td><td class="p-2 text-right font-bold">€ ${subtotal.toFixed(2)}</td><td class="p-2 text-center"><button onclick="removerDoCarrinhoCompra(${index})" class="text-red-500 font-bold">X</button></td></tr>`; }); document.getElementById('compra-total-final').innerText = `€ ${somaSubtotais.toFixed(2)}`; }
+        async function guardarCompra() { const fornecedorId = document.getElementById('compra-fornecedor').value; if(!fornecedorId || carrinhoCompra.length === 0) return alert("Faltam dados."); let totalCompra = 0; carrinhoCompra.forEach(item => { totalCompra += Number(item.produto.custo) * item.quantidade; }); try { await db.from('compras').insert([{ fornecedor_id: fornecedorId, total: totalCompra }]); for (const item of carrinhoCompra) { await db.from('produtos').update({ estoque: item.produto.estoque + item.quantidade }).eq('id', item.produto.id); } fecharModalCompra(); carregarCompras(); carregarDashboard(); } catch(error) { alert(error.message); } }
+
+        // --- MÓDULO FINANCEIRO ---
+        async function carregarFinanceiro() {
+            const tbody = document.getElementById('tabela-financeiro');
+            tbody.innerHTML = '<tr><td colspan="6" class="p-2 text-center text-gray-500">A carregar...</td></tr>';
+            const { data, error } = await db.from('financeiro').select('*').order('vencimento', { ascending: true });
+            if (error) return tbody.innerHTML = `<tr><td colspan="6" class="p-2 text-red-500">Erro: ${error.message}</td></tr>`;
+            if (data.length === 0) return tbody.innerHTML = '<tr><td colspan="6" class="p-2 text-center text-gray-500">Nenhum registo financeiro.</td></tr>';
+            tbody.innerHTML = '';
+            data.forEach(f => {
+                const dataFormatada = new Date(f.vencimento).toLocaleDateString('pt-PT');
+                const isReceber = f.tipo === 'RECEBER';
+                const corTipo = isReceber ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100';
+                const corStatus = f.status === 'PAGO' ? 'text-blue-600 font-bold' : 'text-yellow-600 font-bold';
+                const botaoPagar = f.status === 'PENDENTE' ? `<button onclick="marcarComoPago('${f.id}')" class="text-blue-500 hover:underline border border-blue-500 px-2 py-1 rounded text-xs">Marcar Pago</button>` : `<span class="text-gray-400 text-sm">✓ Liquidado</span>`;
+                tbody.innerHTML += `<tr class="border-b hover:bg-gray-50"><td class="p-2"><span class="px-2 py-1 rounded text-xs font-bold ${corTipo}">${f.tipo}</span></td><td class="p-2 font-medium">${f.descricao}</td><td class="p-2 text-right font-bold ${isReceber ? 'text-green-700' : 'text-red-700'}">€ ${Number(f.valor).toFixed(2)}</td><td class="p-2 text-center">${dataFormatada}</td><td class="p-2 text-center ${corStatus}">${f.status}</td><td class="p-2 text-center">${botaoPagar}</td></tr>`;
+            });
+        }
+        function abrirModalNovoFinanceiro() { document.getElementById('fin-descricao').value = ''; document.getElementById('fin-valor').value = ''; document.getElementById('fin-vencimento').value = ''; document.getElementById('modal-financeiro').classList.remove('hidden'); }
+        function fecharModalFinanceiro() { document.getElementById('modal-financeiro').classList.add('hidden'); }
+        async function guardarFinanceiro() { const tipo = document.getElementById('fin-tipo').value; const descricao = document.getElementById('fin-descricao').value; const valor = document.getElementById('fin-valor').value; const vencimento = document.getElementById('fin-vencimento').value; if(!descricao || !valor || !vencimento) return alert("Preencha todos os campos."); try { await db.from('financeiro').insert([{ tipo: tipo, descricao: descricao, valor: valor, vencimento: vencimento, status: 'PENDENTE' }]); fecharModalFinanceiro(); carregarFinanceiro(); } catch (error) { alert("Erro ao gravar: " + error.message); } }
+        async function marcarComoPago(id) { if(!confirm("Tem a certeza que deseja marcar este registo como PAGO?")) return; try { await db.from('financeiro').update({ status: 'PAGO' }).eq('id', id); carregarFinanceiro(); } catch (error) { alert("Erro ao atualizar: " + error.message); } }
+
+        // --- DASHBOARD ---
+        async function carregarDashboard() {
+            const { data: dataVendas } = await db.from('vendas').select('total');
+            if (dataVendas) { const totalVendas = dataVendas.reduce((sum, venda) => sum + Number(venda.total), 0); document.getElementById('dash-vendas').innerText = `€ ${totalVendas.toFixed(2)}`; }
+            const { data: dataCompras } = await db.from('compras').select('total');
+            if (dataCompras) { const totalCompras = dataCompras.reduce((sum, compra) => sum + Number(compra.total), 0); document.getElementById('dash-compras').innerText = `€ ${totalCompras.toFixed(2)}`; }
+        }
+    </script>
+</body>
+</html>
